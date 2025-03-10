@@ -1,13 +1,32 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_cors import CORS
 import mysql.connector
+import psycopg2
 import bcrypt
 from config.config import Config
 from functools import wraps
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# Configure CORS
+CORS(app, resources={
+    r"/*": {
+        "origins": [
+            "http://52.41.36.82",
+            "http://54.191.253.12",
+            "http://44.226.122.3",
+            "https://52.41.36.82",
+            "https://54.191.253.12",
+            "https://44.226.122.3"
+        ],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -16,14 +35,18 @@ login_manager.login_view = 'login'
 # Database connection
 def get_db_connection():
     try:
-        conn = mysql.connector.connect(
+        # Check if DATABASE_URL is set (PostgreSQL)
+        if 'DATABASE_URL' in os.environ:
+            return psycopg2.connect(os.environ['DATABASE_URL'])
+        
+        # Fallback to MySQL
+        return mysql.connector.connect(
             host=Config.DB_HOST,
             user=Config.DB_USER,
             password=Config.DB_PASSWORD,
             database=Config.DB_NAME
         )
-        return conn
-    except mysql.connector.Error as err:
+    except Exception as err:
         print(f"Database connection error: {err}")
         return None
 
@@ -1033,6 +1056,31 @@ def get_leave_details(leave_id):
         return jsonify({'error': 'Error loading leave details'}), 500
         
     return jsonify({'error': 'Error loading leave details'}), 500
+
+@app.route('/health')
+def health_check():
+    try:
+        # Test database connection
+        conn = get_db_connection()
+        if conn:
+            conn.close()
+            return jsonify({
+                'status': 'healthy',
+                'database': 'connected',
+                'timestamp': datetime.utcnow().isoformat()
+            }), 200
+        else:
+            return jsonify({
+                'status': 'unhealthy',
+                'database': 'disconnected',
+                'timestamp': datetime.utcnow().isoformat()
+            }), 500
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': datetime.utcnow().isoformat()
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True) 
