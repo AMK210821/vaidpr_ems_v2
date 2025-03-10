@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Employee Dashboard - Vaid PR EMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Personal Statistics Row -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card bg-primary text-white">
+                <i class="fas fa-calendar-check"></i>
+                <div class="stats-number">{{ attendance_percentage }}%</div>
+                <div class="stats-text">Attendance Rate</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card bg-success text-white">
+                <i class="fas fa-tasks"></i>
+                <div class="stats-number">{{ completed_tasks }}</div>
+                <div class="stats-text">Completed Tasks</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card bg-warning text-white">
+                <i class="fas fa-clock"></i>
+                <div class="stats-number">{{ pending_tasks }}</div>
+                <div class="stats-text">Pending Tasks</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card bg-info text-white">
+                <i class="fas fa-calendar-alt"></i>
+                <div class="stats-number">{{ leaves_taken }}/{{ total_leaves }}</div>
+                <div class="stats-text">Leaves Taken</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="row mb-4">
+        <div class="col-xl-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">My Profile</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <img src="{{ url_for('static', filename='img/default-avatar.png') }}" class="rounded-circle mb-3" alt="Profile Picture" width="128">
+                        <h4 class="mb-0">{{ employee_name }}</h4>
+                        <p class="text-muted">{{ employee_domain }}</p>
+                    </div>
+                    <div class="profile-info">
+                        <div class="mb-3">
+                            <strong>Email:</strong> {{ current_user.email }}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Mobile:</strong> {{ employee_mobile }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="col-xl-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <a href="#leaveApplication" class="btn btn-primary btn-block" data-bs-toggle="tab">
+                                <i class="fas fa-calendar-plus"></i> Apply for Leave
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <a href="{{ url_for('employee_work_log') }}" class="btn btn-info btn-block">
+                                <i class="fas fa-tasks"></i> View Work Log
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Tabs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#workAssignments">
+                                <i class="fas fa-tasks"></i> Work Assignments
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#leaveApplication">
+                                <i class="fas fa-calendar-plus"></i> Apply for Leave
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#leaveHistory">
+                                <i class="fas fa-history"></i> Leave History
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content">
+                        <!-- Work Assignments Tab -->
+                        <div class="tab-pane fade show active" id="workAssignments">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Task</th>
+                                            <th>Assigned Date</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if work_assignments %}
+                                            {% for work in work_assignments %}
+                                            <tr>
+                                                <td>{{ work.subject }}</td>
+                                                <td>{{ work.formatted_assigned_date }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ 'warning' if work.status == 'Pending' else 'success' }}">
+                                                        {{ work.status }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#workDetailModal{{ work.id }}">
+                                                        View Details
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="4" class="text-center">No work assignments found.</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Leave Application Tab -->
+                        <div class="tab-pane fade" id="leaveApplication">
+                            <form action="{{ url_for('apply_leave') }}" method="POST">
+                                <div class="mb-3">
+                                    <label for="subject" class="form-label">Subject</label>
+                                    <input type="text" class="form-control" id="subject" name="subject" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="body" class="form-label">Description</label>
+                                    <textarea class="form-control" id="body" name="body" rows="4" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Submit Application</button>
+                            </form>
+                        </div>
+
+                        <!-- Leave History Tab -->
+                        <div class="tab-pane fade" id="leaveHistory">
+                            <div class="table-responsive">
+                                {% if leave_applications %}
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Subject</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for leave in leave_applications %}
+                                        <tr>
+                                            <td>{{ leave.subject }}</td>
+                                            <td>{{ leave.formatted_request_date }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ 'warning' if leave.status == 'Pending' else 'success' if leave.status == 'Accepted' else 'danger' }}">
+                                                    {{ leave.status }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                {% else %}
+                                <p class="text-muted text-center mb-0">No leave applications found</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Work Detail Modals -->
+{% for work in work_assignments %}
+<div class="modal fade" id="workDetailModal{{ work.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Work Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>{{ work.subject }}</h6>
+                <p class="text-muted">Assigned on {{ work.formatted_assigned_date }}</p>
+                <div class="mb-3">
+                    <strong>Description:</strong>
+                    <p>{{ work.body }}</p>
+                </div>
+                {% if work.status == 'Pending' %}
+                <form action="{{ url_for('update_work_status', work_id=work.id) }}" method="POST">
+                    <button type="submit" class="btn btn-success">Mark as Complete</button>
+                </form>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize all modals
+        var modals = document.querySelectorAll('.modal');
+        modals.forEach(function(modal) {
+            new bootstrap.Modal(modal);
+        });
+
+        // Form validation for leave application
+        var leaveForm = document.querySelector('#leaveApplication form');
+        if (leaveForm) {
+            leaveForm.addEventListener('submit', function(e) {
+                var subject = document.querySelector('#subject').value.trim();
+                var body = document.querySelector('#body').value.trim();
+                
+                if (!subject || !body) {
+                    e.preventDefault();
+                    alert('Please fill in all fields');
+                }
+            });
+        }
+
+        // Handle URL hash for tab navigation
+        if (window.location.hash) {
+            var tab = new bootstrap.Tab(document.querySelector(window.location.hash));
+            tab.show();
+        }
+    });
+</script>
+{% endblock %} 

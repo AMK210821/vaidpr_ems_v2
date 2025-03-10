@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Leave Applications - Vaid PR EMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Statistics Row -->
+    <div class="row mb-4">
+        <div class="col-xl-4 col-md-4">
+            <div class="stats-card bg-warning text-white">
+                <i class="fas fa-clock"></i>
+                <div class="stats-number">{{ pending_count }}</div>
+                <div class="stats-text">Pending Applications</div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-4">
+            <div class="stats-card bg-success text-white">
+                <i class="fas fa-check-circle"></i>
+                <div class="stats-number">{{ accepted_count }}</div>
+                <div class="stats-text">Accepted Applications</div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-4">
+            <div class="stats-card bg-danger text-white">
+                <i class="fas fa-times-circle"></i>
+                <div class="stats-number">{{ declined_count }}</div>
+                <div class="stats-text">Declined Applications</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leave Applications Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Leave Applications</h5>
+                    <div class="d-flex gap-2">
+                        <select class="form-select" id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Accepted">Accepted</option>
+                            <option value="Declined">Declined</option>
+                        </select>
+                        <input type="text" class="form-control" id="tableSearch" placeholder="Search applications...">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Employee</th>
+                                    <th>Subject</th>
+                                    <th>Request Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for leave in leaves %}
+                                <tr>
+                                    <td>{{ leave.id }}</td>
+                                    <td>{{ leave.employee_name }}</td>
+                                    <td>{{ leave.subject }}</td>
+                                    <td>{{ leave.formatted_request_date }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'warning' if leave.status == 'Pending' else 'success' if leave.status == 'Accepted' else 'danger' }}">
+                                            {{ leave.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info view-leave" data-id="{{ leave.id }}" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        {% if leave.status == 'Pending' %}
+                                        <button class="btn btn-sm btn-success accept-leave" data-id="{{ leave.id }}" title="Accept">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger decline-leave" data-id="{{ leave.id }}" title="Decline">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Leave Modal -->
+<div class="modal fade" id="viewLeaveModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Leave Application Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="fw-bold">Employee:</label>
+                    <p id="modalEmployee"></p>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold">Subject:</label>
+                    <p id="modalSubject"></p>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold">Request Date:</label>
+                    <p id="modalDate"></p>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold">Status:</label>
+                    <p id="modalStatus"></p>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold">Description:</label>
+                    <p id="modalBody"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <div id="modalActions"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Table search and filter functionality
+        const searchInput = document.getElementById('tableSearch');
+        const statusFilter = document.getElementById('statusFilter');
+
+        function filterTable() {
+            const searchText = searchInput.value.toLowerCase();
+            const status = statusFilter.value;
+            const table = document.querySelector('table');
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const text = row.textContent.toLowerCase();
+                const statusCell = row.cells[4].textContent.trim();
+                
+                const matchesSearch = text.includes(searchText);
+                const matchesStatus = !status || statusCell === status;
+
+                row.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+            }
+        }
+
+        if (searchInput) searchInput.addEventListener('keyup', filterTable);
+        if (statusFilter) statusFilter.addEventListener('change', filterTable);
+
+        // View leave details
+        const viewButtons = document.querySelectorAll('.view-leave');
+        viewButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const leaveId = this.dataset.id;
+                const row = this.closest('tr');
+                const modal = new bootstrap.Modal(document.getElementById('viewLeaveModal'));
+                const status = row.cells[4].textContent.trim();
+                
+                // Fetch leave details via AJAX
+                fetch(`/get-leave-details/${leaveId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('modalEmployee').textContent = data.employee_name;
+                        document.getElementById('modalSubject').textContent = data.subject;
+                        document.getElementById('modalDate').textContent = data.formatted_request_date;
+                        document.getElementById('modalStatus').textContent = data.status;
+                        document.getElementById('modalBody').textContent = data.body;
+                        
+                        // Add action buttons for pending applications
+                        const actionsDiv = document.getElementById('modalActions');
+                        if (data.status === 'Pending') {
+                            actionsDiv.innerHTML = `
+                                <button type="button" class="btn btn-success" onclick="window.location.href='/accept-leave/${leaveId}'">
+                                    Accept
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="window.location.href='/decline-leave/${leaveId}'">
+                                    Decline
+                                </button>
+                            `;
+                        } else {
+                            actionsDiv.innerHTML = '';
+                        }
+                        
+                        modal.show();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching leave details:', error);
+                        alert('Error loading leave details. Please try again.');
+                    });
+            });
+        });
+
+        // Accept leave
+        const acceptButtons = document.querySelectorAll('.accept-leave');
+        acceptButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                if (confirm('Are you sure you want to accept this leave application?')) {
+                    const leaveId = this.dataset.id;
+                    window.location.href = `/accept-leave/${leaveId}`;
+                }
+            });
+        });
+
+        // Decline leave
+        const declineButtons = document.querySelectorAll('.decline-leave');
+        declineButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                if (confirm('Are you sure you want to decline this leave application?')) {
+                    const leaveId = this.dataset.id;
+                    window.location.href = `/decline-leave/${leaveId}`;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

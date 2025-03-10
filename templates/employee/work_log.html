@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}My Work Log{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">My Work Assignments</h5>
+                    <div>
+                        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterSection">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filter Section -->
+                <div class="collapse" id="filterSection">
+                    <div class="card-body border-bottom">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Status</label>
+                                    <select class="form-control" id="statusFilter">
+                                        <option value="">All</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Completed">Completed</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Date Range</label>
+                                    <select class="form-control" id="dateFilter">
+                                        <option value="">All Time</option>
+                                        <option value="today">Today</option>
+                                        <option value="week">This Week</option>
+                                        <option value="month">This Month</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Work Status Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h6 class="card-title">Total Tasks</h6>
+                                    <h2 class="mb-0">{{ work_logs|length }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h6 class="card-title">Completed</h6>
+                                    <h2 class="mb-0">{{ work_logs|selectattr('status', 'equalto', 'Completed')|list|length }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <h6 class="card-title">Pending</h6>
+                                    <h2 class="mb-0">{{ work_logs|selectattr('status', 'equalto', 'Pending')|list|length }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h6 class="card-title">Due Today</h6>
+                                    <h2 class="mb-0">{{ work_logs|selectattr('formatted_deadline', 'equalto', today)|list|length }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Work Assignments Table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="workTable">
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Description</th>
+                                    <th>Assigned Date</th>
+                                    <th>Deadline</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if work_logs %}
+                                    {% for work in work_logs %}
+                                        <tr class="work-row" data-status="{{ work.status }}">
+                                            <td>{{ work.subject }}</td>
+                                            <td>
+                                                {% if work.body|length > 50 %}
+                                                    {{ work.body[:50] }}...
+                                                {% else %}
+                                                    {{ work.body }}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ work.formatted_assigned_date }}</td>
+                                            <td>
+                                                <span class="{% if work.formatted_deadline == today %}text-danger fw-bold{% endif %}">
+                                                    {{ work.formatted_deadline }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if work.status == 'Completed' else 'warning' }}">
+                                                    {{ work.status }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#workDetailModal{{ work.id }}">
+                                                    View Details
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">No work assignments found</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Work Detail Modals -->
+{% for work in work_logs %}
+<div class="modal fade" id="workDetailModal{{ work.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Work Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">{{ work.subject }}</h6>
+                        <p class="text-muted mb-0">Assigned on {{ work.formatted_assigned_date }}</p>
+                        <p class="text-muted">Due by {{ work.formatted_deadline }}</p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <span class="badge bg-{{ 'success' if work.status == 'Completed' else 'warning' }} fs-6">
+                            {{ work.status }}
+                        </span>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <h6 class="fw-bold">Description:</h6>
+                    <p class="mb-0">{{ work.body }}</p>
+                </div>
+                {% if work.status == 'Pending' %}
+                    <form action="{{ url_for('update_work_status', work_id=work.id) }}" method="POST">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Mark as Complete
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all modals
+    var modals = document.querySelectorAll('.modal');
+    modals.forEach(function(modal) {
+        new bootstrap.Modal(modal);
+    });
+
+    // Filter functionality
+    const statusFilter = document.getElementById('statusFilter');
+    const dateFilter = document.getElementById('dateFilter');
+    const workRows = document.querySelectorAll('.work-row');
+
+    function filterTable() {
+        const selectedStatus = statusFilter.value;
+        
+        workRows.forEach(row => {
+            const status = row.getAttribute('data-status');
+            let showRow = true;
+
+            if (selectedStatus && status !== selectedStatus) {
+                showRow = false;
+            }
+
+            row.style.display = showRow ? '' : 'none';
+        });
+    }
+
+    statusFilter.addEventListener('change', filterTable);
+    dateFilter.addEventListener('change', filterTable);
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}HR Dashboard - Vaid PR EMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Employee Statistics Row -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card bg-primary text-white">
+                <i class="fas fa-users"></i>
+                <div class="stats-number">{{ total_employees }}</div>
+                <div class="stats-text">Total Employees</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card bg-success text-white">
+                <i class="fas fa-user-check"></i>
+                <div class="stats-number">{{ present_today }}</div>
+                <div class="stats-text">Present Today</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card bg-warning text-white">
+                <i class="fas fa-clock"></i>
+                <div class="stats-number">{{ pending_leaves }}</div>
+                <div class="stats-text">Pending Leaves</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card bg-info text-white">
+                <i class="fas fa-tasks"></i>
+                <div class="stats-number">{{ active_tasks }}</div>
+                <div class="stats-text">Active Tasks</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Row -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="{{ url_for('add_employee') }}" class="btn btn-primary btn-block mb-3">
+                                <i class="fas fa-user-plus"></i> Add New Employee
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('admin_work_log') }}" class="btn btn-success btn-block mb-3">
+                                <i class="fas fa-tasks"></i> Assign Work
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('leave_applications') }}" class="btn btn-info btn-block mb-3">
+                                <i class="fas fa-calendar-alt"></i> Leave Applications
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('employee_log') }}" class="btn btn-secondary btn-block mb-3">
+                                <i class="fas fa-users"></i> Employee Records
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities Row -->
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Leave Applications</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for leave in recent_leaves %}
+                                <tr>
+                                    <td>{{ leave.employee_name }}</td>
+                                    <td>{{ leave.request_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'warning' if leave.status == 'Pending' else 'success' if leave.status == 'Accepted' else 'danger' }}">
+                                            {{ leave.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('leave_applications') }}" class="btn btn-sm btn-primary">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Work Assignments</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Task</th>
+                                    <th>Assigned Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for work in recent_work %}
+                                <tr>
+                                    <td>{{ work.employee_name }}</td>
+                                    <td>{{ work.subject }}</td>
+                                    <td>{{ work.assigned_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('admin_work_log') }}" class="btn btn-sm btn-primary">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-refresh dashboard every 5 minutes
+        setInterval(function() {
+            location.reload();
+        }, 300000);
+    });
+</script>
+{% endblock %} 

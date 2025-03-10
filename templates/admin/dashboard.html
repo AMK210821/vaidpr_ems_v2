@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Vaid PR EMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Domain Statistics Row -->
+    <div class="row mb-4">
+        {% for domain, count in domain_counts.items() %}
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stats-card bg-primary text-white">
+                <i class="fas {% if domain == 'Development' %}fa-code{% elif domain == 'Design' %}fa-palette{% elif domain == 'Marketing' %}fa-bullhorn{% elif domain == 'Sales' %}fa-chart-line{% elif domain == 'HR' %}fa-users-cog{% elif domain == 'Finance' %}fa-money-bill-wave{% else %}fa-building{% endif %}"></i>
+                <div class="stats-number">{{ count }}</div>
+                <div class="stats-text">{{ domain }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Leave Statistics Row -->
+    <div class="row mb-4">
+        <div class="col-xl-4 col-md-4">
+            <div class="stats-card bg-warning text-white">
+                <i class="fas fa-clock"></i>
+                <div class="stats-number">{{ pending_leaves }}</div>
+                <div class="stats-text">Pending Leaves</div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-4">
+            <div class="stats-card bg-success text-white">
+                <i class="fas fa-check-circle"></i>
+                <div class="stats-number">{{ accepted_leaves }}</div>
+                <div class="stats-text">Accepted Leaves</div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-4">
+            <div class="stats-card bg-danger text-white">
+                <i class="fas fa-times-circle"></i>
+                <div class="stats-number">{{ declined_leaves }}</div>
+                <div class="stats-text">Declined Leaves</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Row -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="#" class="btn btn-primary btn-block mb-3">
+                                <i class="fas fa-user-plus"></i> Add New Employee
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="#" class="btn btn-success btn-block mb-3">
+                                <i class="fas fa-tasks"></i> Assign Work
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="#" class="btn btn-info btn-block mb-3">
+                                <i class="fas fa-calendar-alt"></i> View Leave Applications
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="#" class="btn btn-secondary btn-block mb-3">
+                                <i class="fas fa-download"></i> Download Reports
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities Row -->
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Leave Applications</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for leave in recent_leaves %}
+                                <tr>
+                                    <td>{{ leave.employee_name }}</td>
+                                    <td>{{ leave.formatted_request_date }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'warning' if leave.status == 'Pending' else 'success' if leave.status == 'Accepted' else 'danger' }}">
+                                            {{ leave.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('leave_applications') }}" class="btn btn-sm btn-primary">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Work Assignments</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Task</th>
+                                    <th>Assigned Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for work in recent_work %}
+                                <tr>
+                                    <td>{{ work.employee_name }}</td>
+                                    <td>{{ work.subject }}</td>
+                                    <td>{{ work.formatted_assigned_date }}</td>
+                                    <td>
+                                        <a href="{{ url_for('admin_work_log') }}" class="btn btn-sm btn-primary">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-refresh dashboard every 5 minutes
+        setInterval(function() {
+            location.reload();
+        }, 300000);
+    });
+</script>
+{% endblock %} 
