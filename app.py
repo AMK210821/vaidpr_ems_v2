@@ -1,16 +1,21 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_cors import CORS
 import mysql.connector
-import psycopg2
 import bcrypt
 from config.config import Config
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
+from werkzeug.utils import secure_filename
+import json
+import logging
+from logging.handlers import RotatingFileHandler
+import traceback
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.secret_key = Config.SECRET_KEY  # Use secret key from config
 
 # Configure CORS
 CORS(app, resources={
@@ -31,24 +36,23 @@ CORS(app, resources={
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'error'
 
 # Database connection
 def get_db_connection():
     try:
-        # Check if DATABASE_URL is set (PostgreSQL)
-        if 'DATABASE_URL' in os.environ:
-            return psycopg2.connect(os.environ['DATABASE_URL'])
-        
-        # Fallback to MySQL
+        # Connect to MySQL database on Railway
         return mysql.connector.connect(
-            host=Config.DB_HOST,
-            user=Config.DB_USER,
-            password=Config.DB_PASSWORD,
-            database=Config.DB_NAME
+            host='trolley.proxy.rlwy.net',
+            port=19855,
+            user='root',
+            password='hucNoZjKVOsVWROObvpJrkduvyoYLIxx',
+            database='railway'
         )
     except Exception as err:
         print(f"Database connection error: {err}")
-        return None
+        raise
 
 # User class for Flask-Login
 class User(UserMixin):
@@ -58,30 +62,31 @@ class User(UserMixin):
         self.role = role
         self.permission = permission
 
+    def get_id(self):
+        return str(self.email)  # Use email as the user identifier
+
 @login_manager.user_loader
 def load_user(user_id):
     try:
         conn = get_db_connection()
-        if not conn:
-            print("Failed to connect to database in load_user")
+        if conn is None:
             return None
-            
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute('SELECT * FROM ems WHERE id = %s', (user_id,))
-        user_data = cursor.fetchone()
-        cursor.close()
+        cur = conn.cursor(dictionary=True)
+        cur.execute('SELECT * FROM ems WHERE Email = %s', (user_id,))
+        user = cur.fetchone()
+        cur.close()
         conn.close()
         
-        if user_data:
+        if user:
             return User(
-                id=user_data['id'],
-                email=user_data['Email'],
-                role=user_data['Role'],
-                permission=user_data['Permission']
+                id=user['id'],
+                email=user['Email'],
+                role=user['Role'],
+                permission=user['Permission']
             )
         return None
     except Exception as e:
-        print(f"Error in load_user: {e}")
+        print(f"Error loading user: {e}")
         return None
 
 # Role-based access control decorator
@@ -105,28 +110,28 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
+        email = request.form.get('email')
+        password = request.form.get('password')
         
         try:
             conn = get_db_connection()
-            if not conn:
+            if conn is None:
                 flash('Database connection error', 'error')
-                return render_template('login.html')
-                
-            cursor = conn.cursor(dictionary=True)
-            cursor.execute('SELECT * FROM ems WHERE Email = %s', (email,))
-            user = cursor.fetchone()
-            cursor.close()
+                return redirect(url_for('login'))
+            
+            cur = conn.cursor(dictionary=True)  # Use MySQL's dictionary cursor
+            cur.execute('SELECT * FROM ems WHERE Email = %s', (email,))
+            user = cur.fetchone()
+            cur.close()
             conn.close()
-
+            
             if user:
-                # Print password hash for debugging
-                print(f"Stored password hash: {user['Pass']}")
-                print(f"Input password: {password}")
-                
                 try:
-                    if bcrypt.checkpw(password.encode('utf-8'), user['Pass'].encode('utf-8')):
+                    # Convert password to bytes for bcrypt
+                    stored_password = user['Pass'].encode('utf-8')
+                    input_password = password.encode('utf-8')
+                    
+                    if bcrypt.checkpw(input_password, stored_password):
                         user_obj = User(
                             id=user['id'],
                             email=user['Email'],
@@ -134,39 +139,53 @@ def login():
                             permission=user['Permission']
                         )
                         login_user(user_obj)
-                        print(f"User logged in successfully: {user['Email']}")
+                        flash('Login successful!', 'success')
                         return redirect(url_for('dashboard'))
                     else:
-                        print("Password verification failed")
                         flash('Invalid password', 'error')
-                except Exception as e:
-                    print(f"Error during password verification: {e}")
-                    flash('Error during login', 'error')
+                except KeyError as e:
+                    print(f"Database field error: {e}")
+                    print(f"Available fields: {user.keys()}")  # Debug print available fields
+                    flash('Database configuration error', 'error')
             else:
-                print(f"No user found with email: {email}")
                 flash('Invalid email', 'error')
                 
         except Exception as e:
             print(f"Error during login: {e}")
             flash('An error occurred during login', 'error')
-            
+        
+        return redirect(url_for('login'))
+    
     return render_template('login.html')
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    print(f"Current user role: {current_user.role}")
-    if current_user.role == 'Admin':
-        return redirect(url_for('admin_dashboard'))
-    elif current_user.role == 'HR':
-        return redirect(url_for('hr_dashboard'))
-    else:
-        return redirect(url_for('employee_dashboard'))
+    print(f"Current user: {current_user}")  # Debug log
+    print(f"Current user role: {current_user.role}")  # Debug log
+    print(f"Current user email: {current_user.email}")  # Debug log
+    
+    try:
+        if current_user.role == 'Admin':
+            return redirect(url_for('admin_dashboard'))
+        elif current_user.role == 'HR':
+            return redirect(url_for('hr_dashboard'))
+        elif current_user.role == 'Employee':
+            return redirect(url_for('employee_dashboard'))
+        else:
+            print(f"Unknown role: {current_user.role}")  # Debug log
+            flash('Invalid user role', 'error')
+            return redirect(url_for('login'))
+    except Exception as e:
+        print(f"Error in dashboard route: {e}")  # Debug log
+        flash('Error accessing dashboard', 'error')
+        return redirect(url_for('login'))
 
 @app.route('/admin')
 @login_required
 @role_required(['Admin'])
 def admin_dashboard():
+    print(f"Entering admin dashboard route")  # Debug log
     domain_counts = {}
     accepted_leaves = 0
     pending_leaves = 0
@@ -180,6 +199,7 @@ def admin_dashboard():
             cursor = conn.cursor(dictionary=True)
             
             # Get employee counts by domain
+            print("Fetching domain counts...")  # Debug log
             cursor.execute('''
                 SELECT Domain, COUNT(*) as count 
                 FROM ems 
@@ -187,12 +207,15 @@ def admin_dashboard():
                 GROUP BY Domain 
                 ORDER BY count DESC
             ''')
-            for row in cursor.fetchall():
+            domain_results = cursor.fetchall()
+            for row in domain_results:
                 domain_counts[row['Domain']] = row['count']
             
             # Get leave counts
+            print("Fetching leave counts...")  # Debug log
             cursor.execute('SELECT status, COUNT(*) as count FROM leave_applications GROUP BY status')
-            for row in cursor.fetchall():
+            status_results = cursor.fetchall()
+            for row in status_results:
                 if row['status'] == 'Accepted':
                     accepted_leaves = row['count']
                 elif row['status'] == 'Pending':
@@ -201,6 +224,7 @@ def admin_dashboard():
                     declined_leaves = row['count']
             
             # Get recent leaves
+            print("Fetching recent leaves...")  # Debug log
             cursor.execute('''
                 SELECT 
                     la.id,
@@ -217,6 +241,7 @@ def admin_dashboard():
             recent_leaves = cursor.fetchall()
             
             # Get recent work assignments
+            print("Fetching recent work assignments...")  # Debug log
             cursor.execute('''
                 SELECT 
                     w.id,
@@ -224,7 +249,6 @@ def admin_dashboard():
                     w.subject,
                     w.body,
                     w.status,
-                    w.assigned_date,
                     DATE_FORMAT(w.assigned_date, '%Y-%m-%d') as formatted_assigned_date,
                     DATE_FORMAT(w.deadline, '%Y-%m-%d') as formatted_deadline,
                     e.Name as employee_name 
@@ -234,14 +258,14 @@ def admin_dashboard():
             ''')
             recent_work = cursor.fetchall()
             
-            # Debug logging
-            print("Recent work data:", recent_work)
-            
             cursor.close()
             conn.close()
             
+            print("Successfully fetched all dashboard data")  # Debug log
+            
     except Exception as e:
-        print(f"Error fetching dashboard data: {e}")
+        print(f"Error fetching admin dashboard data: {e}")
+        traceback.print_exc()  # Print full traceback
         flash('Error loading dashboard data', 'error')
     
     return render_template('admin/dashboard.html',
@@ -1081,6 +1105,37 @@ def health_check():
             'error': str(e),
             'timestamp': datetime.utcnow().isoformat()
         }), 500
+
+@app.route('/upload', methods=['POST'])
+@login_required
+def upload_file():
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file part'}), 400
+            
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+            
+        if file:
+            # Create upload directory if it doesn't exist
+            upload_folder = app.config['UPLOAD_FOLDER']
+            os.makedirs(upload_folder, exist_ok=True)
+            
+            # Save the file
+            filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}"
+            file_path = os.path.join(upload_folder, filename)
+            file.save(file_path)
+            
+            return jsonify({
+                'message': 'File uploaded successfully',
+                'filename': filename,
+                'path': file_path
+            }), 200
+            
+    except Exception as e:
+        print(f"Error uploading file: {e}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True) 
