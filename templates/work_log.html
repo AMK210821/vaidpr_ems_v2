@@ -31,21 +31,21 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="subject" class="form-label">Subject</label>
-                                <input type="text" class="form-control" id="subject" name="subject" required>
+                                <input type="text" class="form-control" id="subject" name="subjects[]" required>
                                 <div class="invalid-feedback">
                                     Please provide a subject.
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label for="deadline" class="form-label">Deadline</label>
-                                <input type="date" class="form-control" id="deadline" name="deadline">
+                                <input type="date" class="form-control" id="deadline" name="deadlines[]">
                             </div>
                         </div>
                         
                         <div class="row mb-3">
                             <div class="col-12">
                                 <label for="body" class="form-label">Work Description</label>
-                                <textarea class="form-control" id="body" name="body" rows="3" required></textarea>
+                                <textarea class="form-control" id="body" name="bodies[]" rows="3" required></textarea>
                                 <div class="invalid-feedback">
                                     Please provide work description.
                                 </div>

@@ -619,6 +619,7 @@ def admin_work_log():
                 hr_domain = current_user.email.split('@')[-1]
                 cursor.execute('SELECT Email, Name FROM ems WHERE Role = "Employee" AND Email LIKE %s', (f'%@{hr_domain}',))
             employees = cursor.fetchall()
+            print(f"Fetched employees: {employees}")  # Debug log
             
             # Get work logs
             if current_user.role == 'Admin':
@@ -655,12 +656,14 @@ def admin_work_log():
                     ORDER BY w.assigned_date DESC
                 ''', (f'%@{hr_domain}',))
             work_logs = cursor.fetchall()
+            print(f"Fetched work logs: {work_logs}")  # Debug log
             
             cursor.close()
             conn.close()
             
     except Exception as e:
         print(f"Error fetching work log data: {e}")
+        traceback.print_exc()  # Print full traceback
         flash('Error loading work log data', 'error')
         
     return render_template('work_log.html', 
@@ -717,6 +720,9 @@ def assign_work():
             bodies = request.form.getlist('bodies[]')
             deadlines = request.form.getlist('deadlines[]')
             
+            print(f"Assigning work to emails: {employee_emails}")  # Debug log
+            print(f"Subjects: {subjects}, Bodies: {bodies}, Deadlines: {deadlines}")  # Debug log
+            
             conn = get_db_connection()
             if conn:
                 cursor = conn.cursor()
@@ -729,6 +735,7 @@ def assign_work():
                             (employee_email, subject, body, deadline) 
                             VALUES (%s, %s, %s, %s)
                         """, (email, subject, body, deadline))
+                        print(f"Inserted work for {email} with subject {subject}")  # Debug log
                 
                 conn.commit()
                 cursor.close()
@@ -739,6 +746,7 @@ def assign_work():
                 
         except Exception as e:
             print(f"Error assigning work: {e}")
+            traceback.print_exc()  # Print full traceback
             flash('Error assigning work', 'error')
             
     return redirect(url_for('admin_work_log'))
