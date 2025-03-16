@@ -615,24 +615,45 @@ def admin_work_log():
             if current_user.role == 'Admin':
                 cursor.execute('SELECT Email, Name FROM ems WHERE Role != "Admin"')
             else:
-                cursor.execute('SELECT Email, Name FROM ems WHERE Role = "Employee"')
+                # For HR, filter employees by domain
+                hr_domain = current_user.email.split('@')[-1]
+                cursor.execute('SELECT Email, Name FROM ems WHERE Role = "Employee" AND Email LIKE %s', (f'%@{hr_domain}',))
             employees = cursor.fetchall()
             
-            # Get all work logs for Admin/HR view
-            cursor.execute('''
-                SELECT 
-                    w.id,
-                    w.employee_email,
-                    w.subject,
-                    w.body,
-                    w.status,
-                    DATE_FORMAT(w.assigned_date, '%Y-%m-%d %H:%i') as formatted_assigned_date,
-                    DATE_FORMAT(w.deadline, '%Y-%m-%d') as formatted_deadline,
-                    e.Name as employee_name 
-                FROM work_log w 
-                JOIN ems e ON w.employee_email = e.Email 
-                ORDER BY w.assigned_date DESC
-            ''')
+            # Get work logs
+            if current_user.role == 'Admin':
+                # Admins see all work logs
+                cursor.execute('''
+                    SELECT 
+                        w.id,
+                        w.employee_email,
+                        w.subject,
+                        w.body,
+                        w.status,
+                        DATE_FORMAT(w.assigned_date, '%Y-%m-%d %H:%i') as formatted_assigned_date,
+                        DATE_FORMAT(w.deadline, '%Y-%m-%d') as formatted_deadline,
+                        e.Name as employee_name 
+                    FROM work_log w 
+                    JOIN ems e ON w.employee_email = e.Email 
+                    ORDER BY w.assigned_date DESC
+                ''')
+            else:
+                # HR sees work logs for their domain
+                cursor.execute('''
+                    SELECT 
+                        w.id,
+                        w.employee_email,
+                        w.subject,
+                        w.body,
+                        w.status,
+                        DATE_FORMAT(w.assigned_date, '%Y-%m-%d %H:%i') as formatted_assigned_date,
+                        DATE_FORMAT(w.deadline, '%Y-%m-%d') as formatted_deadline,
+                        e.Name as employee_name 
+                    FROM work_log w 
+                    JOIN ems e ON w.employee_email = e.Email 
+                    WHERE e.Email LIKE %s
+                    ORDER BY w.assigned_date DESC
+                ''', (f'%@{hr_domain}',))
             work_logs = cursor.fetchall()
             
             cursor.close()
@@ -645,7 +666,7 @@ def admin_work_log():
     return render_template('work_log.html', 
                         employees=employees, 
                         work_logs=work_logs, 
-                        is_admin=True)
+                        is_admin=(current_user.role == 'Admin'))
 
 @app.route('/employee/work-log')
 @login_required
@@ -692,21 +713,22 @@ def assign_work():
         try:
             # Retrieve a list of employee emails from the form
             employee_emails = request.form.getlist('employee_emails')
-            subject = request.form['subject']
-            body = request.form['body']
-            deadline = request.form.get('deadline', datetime.now().strftime('%Y-%m-%d'))
+            subjects = request.form.getlist('subjects[]')
+            bodies = request.form.getlist('bodies[]')
+            deadlines = request.form.getlist('deadlines[]')
             
             conn = get_db_connection()
             if conn:
                 cursor = conn.cursor()
                 
-                # Insert work assignment for each employee
+                # Insert work assignment for each employee and each task
                 for email in employee_emails:
-                    cursor.execute("""
-                        INSERT INTO work_log 
-                        (employee_email, subject, body, deadline) 
-                        VALUES (%s, %s, %s, %s)
-                    """, (email, subject, body, deadline))
+                    for subject, body, deadline in zip(subjects, bodies, deadlines):
+                        cursor.execute("""
+                            INSERT INTO work_log 
+                            (employee_email, subject, body, deadline) 
+                            VALUES (%s, %s, %s, %s)
+                        """, (email, subject, body, deadline))
                 
                 conn.commit()
                 cursor.close()
