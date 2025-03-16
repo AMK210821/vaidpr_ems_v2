@@ -292,27 +292,30 @@ def hr_dashboard():
         if conn:
             cursor = conn.cursor(dictionary=True)
             
-            # Get total employees count
-            cursor.execute('SELECT COUNT(*) as count FROM ems WHERE Role = "Employee"')
+            # Extract domain from HR email
+            hr_domain = current_user.email.split('@')[-1]
+            
+            # Get total employees count for the HR's domain
+            cursor.execute('SELECT COUNT(*) as count FROM ems WHERE Role = "Employee" AND Email LIKE %s', (f'%@{hr_domain}',))
             result = cursor.fetchone()
             total_employees = result['count'] if result else 0
             
-            # Get present employees count (assuming attendance is marked daily)
-            cursor.execute('SELECT COUNT(*) as count FROM ems WHERE Role = "Employee" AND Attendance = 1')
+            # Get present employees count for the HR's domain
+            cursor.execute('SELECT COUNT(*) as count FROM ems WHERE Role = "Employee" AND Attendance = 1 AND Email LIKE %s', (f'%@{hr_domain}',))
             result = cursor.fetchone()
             present_today = result['count'] if result else 0
             
-            # Get pending leaves count
-            cursor.execute('SELECT COUNT(*) as count FROM leave_applications WHERE status = "Pending"')
+            # Get pending leaves count for the HR's domain
+            cursor.execute('SELECT COUNT(*) as count FROM leave_applications WHERE status = "Pending" AND employee_email LIKE %s', (f'%@{hr_domain}',))
             result = cursor.fetchone()
             pending_leaves = result['count'] if result else 0
             
-            # Get active tasks count
-            cursor.execute('SELECT COUNT(*) as count FROM work_log WHERE status = "Pending"')
+            # Get active tasks count for the HR's domain
+            cursor.execute('SELECT COUNT(*) as count FROM work_log WHERE status = "Pending" AND employee_email LIKE %s', (f'%@{hr_domain}',))
             result = cursor.fetchone()
             active_tasks = result['count'] if result else 0
             
-            # Get recent leaves
+            # Get recent leaves for the HR's domain
             cursor.execute('''
                 SELECT 
                     la.id,
@@ -324,11 +327,12 @@ def hr_dashboard():
                     e.Name as employee_name 
                 FROM leave_applications la 
                 JOIN ems e ON la.employee_email = e.Email 
+                WHERE la.employee_email LIKE %s
                 ORDER BY request_date DESC LIMIT 5
-            ''')
+            ''', (f'%@{hr_domain}',))
             recent_leaves = cursor.fetchall()
             
-            # Get recent work assignments
+            # Get recent work assignments for the HR's domain
             cursor.execute('''
                 SELECT 
                     w.id,
@@ -341,8 +345,9 @@ def hr_dashboard():
                     e.Name as employee_name 
                 FROM work_log w 
                 JOIN ems e ON w.employee_email = e.Email 
+                WHERE w.employee_email LIKE %s
                 ORDER BY w.assigned_date DESC LIMIT 5
-            ''')
+            ''', (f'%@{hr_domain}',))
             recent_work = cursor.fetchall()
             
             cursor.close()
