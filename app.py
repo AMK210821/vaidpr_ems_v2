@@ -690,7 +690,8 @@ def employee_work_log():
 def assign_work():
     if request.method == 'POST':
         try:
-            employee_email = request.form['employee_email']
+            # Retrieve a list of employee emails from the form
+            employee_emails = request.form.getlist('employee_emails')
             subject = request.form['subject']
             body = request.form['body']
             deadline = request.form.get('deadline', datetime.now().strftime('%Y-%m-%d'))
@@ -698,16 +699,20 @@ def assign_work():
             conn = get_db_connection()
             if conn:
                 cursor = conn.cursor()
-                cursor.execute("""
-                    INSERT INTO work_log 
-                    (employee_email, subject, body, deadline) 
-                    VALUES (%s, %s, %s, %s)
-                """, (employee_email, subject, body, deadline))
+                
+                # Insert work assignment for each employee
+                for email in employee_emails:
+                    cursor.execute("""
+                        INSERT INTO work_log 
+                        (employee_email, subject, body, deadline) 
+                        VALUES (%s, %s, %s, %s)
+                    """, (email, subject, body, deadline))
+                
                 conn.commit()
                 cursor.close()
                 conn.close()
                 
-                flash('Work assigned successfully!', 'success')
+                flash('Work assigned successfully to selected employees!', 'success')
                 return redirect(url_for('admin_work_log'))
                 
         except Exception as e:
