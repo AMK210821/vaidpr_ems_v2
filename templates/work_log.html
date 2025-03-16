@@ -14,16 +14,13 @@
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('assign_work') }}" class="needs-validation" novalidate>
                         <div id="emailFields">
-                            <div class="row mb-3 email-field">
+                            <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label for="employee_email" class="form-label">Employee Email</label>
-                                    <input type="email" class="form-control" name="employee_emails[]" required>
+                                    <input type="email" class="form-control" name="employee_email" required>
                                     <div class="invalid-feedback">
                                         Please provide a valid email.
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <button type="button" class="btn btn-secondary mt-4" onclick="addEmailField()">Add Another Email</button>
                                 </div>
                             </div>
                         </div>

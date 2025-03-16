@@ -714,38 +714,37 @@ def employee_work_log():
 def assign_work():
     if request.method == 'POST':
         try:
-            # Retrieve a list of employee emails from the form
-            employee_emails = request.form.getlist('employee_emails')
+            # Retrieve a single employee email from the form
+            employee_email = request.form.get('employee_email')
             subjects = request.form.getlist('subjects[]')
             bodies = request.form.getlist('bodies[]')
             deadlines = request.form.getlist('deadlines[]')
             
-            print(f"Assigning work to emails: {employee_emails}")  # Debug log
+            print(f"Assigning work to email: {employee_email}")  # Debug log
             print(f"Subjects: {subjects}, Bodies: {bodies}, Deadlines: {deadlines}")  # Debug log
             
             conn = get_db_connection()
             if conn:
                 cursor = conn.cursor()
                 
-                # Insert work assignment for each employee and each task
-                for email in employee_emails:
-                    for subject, body, deadline in zip(subjects, bodies, deadlines):
-                        try:
-                            cursor.execute("""
-                                INSERT INTO work_log 
-                                (employee_email, subject, body, deadline) 
-                                VALUES (%s, %s, %s, %s)
-                            """, (email, subject, body, deadline))
-                            print(f"Inserted work for {email} with subject {subject}")  # Debug log
-                        except Exception as insert_error:
-                            print(f"Error inserting work for {email}: {insert_error}")
-                            traceback.print_exc()  # Print full traceback
+                # Insert work assignment for the employee
+                for subject, body, deadline in zip(subjects, bodies, deadlines):
+                    try:
+                        cursor.execute("""
+                            INSERT INTO work_log 
+                            (employee_email, subject, body, deadline) 
+                            VALUES (%s, %s, %s, %s)
+                        """, (employee_email, subject, body, deadline))
+                        print(f"Inserted work for {employee_email} with subject {subject}")  # Debug log
+                    except Exception as insert_error:
+                        print(f"Error inserting work for {employee_email}: {insert_error}")
+                        traceback.print_exc()  # Print full traceback
                 
                 conn.commit()
                 cursor.close()
                 conn.close()
                 
-                flash('Work assigned successfully to selected employees!', 'success')
+                flash('Work assigned successfully!', 'success')
                 return redirect(url_for('admin_work_log'))
                 
         except Exception as e:
