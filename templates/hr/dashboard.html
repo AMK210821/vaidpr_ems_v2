@@ -131,7 +131,7 @@
                                 <tr>
                                     <td>{{ work.employee_name }}</td>
                                     <td>{{ work.subject }}</td>
-                                    <td>{{ work.assigned_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ work.formatted_assigned_date }}</td>
                                     <td>
                                         <a href="{{ url_for('admin_work_log') }}" class="btn btn-sm btn-primary">View</a>
                                     </td>
