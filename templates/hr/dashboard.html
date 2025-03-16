@@ -93,7 +93,7 @@
                                 {% for leave in recent_leaves %}
                                 <tr>
                                     <td>{{ leave.employee_name }}</td>
-                                    <td>{{ leave.request_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ leave.formatted_request_date }}</td>
                                     <td>
                                         <span class="badge bg-{{ 'warning' if leave.status == 'Pending' else 'success' if leave.status == 'Accepted' else 'danger' }}">
                                             {{ leave.status }}
