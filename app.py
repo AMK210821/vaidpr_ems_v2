@@ -730,12 +730,16 @@ def assign_work():
                 # Insert work assignment for each employee and each task
                 for email in employee_emails:
                     for subject, body, deadline in zip(subjects, bodies, deadlines):
-                        cursor.execute("""
-                            INSERT INTO work_log 
-                            (employee_email, subject, body, deadline) 
-                            VALUES (%s, %s, %s, %s)
-                        """, (email, subject, body, deadline))
-                        print(f"Inserted work for {email} with subject {subject}")  # Debug log
+                        try:
+                            cursor.execute("""
+                                INSERT INTO work_log 
+                                (employee_email, subject, body, deadline) 
+                                VALUES (%s, %s, %s, %s)
+                            """, (email, subject, body, deadline))
+                            print(f"Inserted work for {email} with subject {subject}")  # Debug log
+                        except Exception as insert_error:
+                            print(f"Error inserting work for {email}: {insert_error}")
+                            traceback.print_exc()  # Print full traceback
                 
                 conn.commit()
                 cursor.close()
