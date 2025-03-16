@@ -67,10 +67,6 @@ python app.py
 http://localhost:5000
 ```
 
-## Default Admin Login
-
-- Email: admin@vaidpr.com
-- Password: admin123
 
 ## Project Structure
 
