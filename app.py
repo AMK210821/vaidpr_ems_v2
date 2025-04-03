@@ -1180,5 +1180,16 @@ def upload_file():
         print(f"Error uploading file: {e}")
         return jsonify({'error': str(e)}), 500
 
+# @app.route('/meet')  #c5
+# @login_required
+# @role_required(['Employee'])
+# def meet():
+#     if current_user.domain == 'Development':
+#         return redirect('https://meet.google.com/qso-sdhv-myg')
+#     elif current_user.domain == 'Design':
+#         return redirect('https://meet.google.com/xam-iapn-ins')
+#     else :
+#         return 'no meet link available'
+
 if __name__ == '__main__':
     app.run(debug=True) 
