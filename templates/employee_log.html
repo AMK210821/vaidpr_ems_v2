@@ -53,6 +53,11 @@
                                         <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editModal{{ employee.id }}" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </button>
+<!--                                         <button class="btn btn-sm btn-success" data-employee-id="{{ employee.id }}"
+                                            onclick="addAttendance(this.getAttribute('data-employee-id'))"
+                                            title="Mark Attendance">
+                                            <i class="fas fa-calendar-check"></i>
+                                        </button> -->
                                         <button class="btn btn-sm btn-danger" data-employee-id="{{ employee.id }}" onclick="confirmDelete(this.getAttribute('data-employee-id'))" title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
