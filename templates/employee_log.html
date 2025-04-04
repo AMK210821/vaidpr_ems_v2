@@ -175,5 +175,25 @@
         deleteForm.action = `/delete-employee/${employeeId}`;
         deleteModal.show();
     }
+
+    // function addAttendance(employeeId) {
+    //     fetch('/update_attendance', {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json'
+    //         },
+    //         body: JSON.stringify({ employee_id: employeeId })
+    //     })
+    //         .then(response => response.json())
+    //         .then(data => {
+    //             if (data.message) {
+    //                 alert("Attendance updated successfully!");
+    //                 location.reload();  // Refresh page to reflect updated attendance
+    //             } else {
+    //                 alert("Error: " + data.error);
+    //             }
+    //         })
+    //         .catch(error => console.error('Error:', error));
+    // }
 </script>
 {% endblock %} 
