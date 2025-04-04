@@ -1191,5 +1191,32 @@ def upload_file():
 #     else :
 #         return 'no meet link available'
 
+
+# @app.route('/update_attendance', methods=['POST'])
+# def update_attendance():
+#     try:
+#         data = request.get_json()
+#         employee_id = data.get('employee_id')
+
+#         if not employee_id:
+#             return jsonify({"error": "Employee ID is required"}), 400
+
+#         conn = get_db_connection()
+#         cursor = conn.cursor()
+
+#         # Increment attendance by 1
+#         cursor.execute("UPDATE ems SET Attendance = Attendance + 1 WHERE id = %s", (employee_id,))
+#         conn.commit()
+
+#         cursor.close()
+#         conn.close()
+
+#         return jsonify({"message": "Attendance updated successfully"}), 200
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+#1----------
+
+
 if __name__ == '__main__':
     app.run(debug=True) 
