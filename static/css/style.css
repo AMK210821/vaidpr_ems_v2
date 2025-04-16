@@ -39,6 +39,7 @@ body {
     background: #343a40;
     color: #fff;
     transition: all 0.3s;
+    position: fixed;
 }
 
 #sidebar.active {
@@ -72,10 +73,16 @@ body {
 
 /* Content Area */
 #content {
-    width: 100%;
+    /* width: 100%;
     padding: 20px;
     min-height: 100vh;
-    transition: all 0.3s;
+    transition: all 0.3s; */
+    margin-left: 250px; /* Same as the sidebar width */
+    flex: 1;
+    overflow-y: auto; /* Enable scrolling for the main content */
+    padding: 20px;
+    height: 100vh; /* Full height for scrolling */
+    box-sizing: border-box;
 }
 
 /* Cards and Stats */
@@ -161,3 +168,33 @@ body {
         display: none;
     }
 } 
+
+/* Make the table container scrollable */
+.table-responsive {
+    max-height: 400px; /* Adjust the height as needed */
+    overflow-y: auto; /* Enable vertical scrolling */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Optional: Add a border to the table container for better visibility */
+.table-responsive {
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.table-responsive {
+    max-height: 400px; /* Adjust the height as needed */
+    overflow-y: auto; /* Enable vertical scrolling */
+    overflow-x: auto; /* Enable horizontal scrolling for wide tables */
+    border: 1px solid #ddd; /* Optional: Add a border for better visibility */
+    padding: 10px;
+    border-radius: 5px;
+}
+
+/* Ensure the table adjusts to its content */
+.table {
+    width: 100%; /* Ensure the table takes full width of the container */
+    table-layout: auto; /* Allow columns to adjust based on content */
+    white-space: nowrap; /* Prevent text wrapping in table cells */
+}
