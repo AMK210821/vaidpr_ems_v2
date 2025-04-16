@@ -61,6 +61,7 @@ class User(UserMixin):
         self.email = email
         self.role = role
         self.permission = permission
+        self.domain = domain
 
     def get_id(self):
         return str(self.email)  # Use email as the user identifier
@@ -83,6 +84,7 @@ def load_user(user_id):
                 email=user['Email'],
                 role=user['Role'],
                 permission=user['Permission']
+                domain=user['Domain']
             )
         return None
     except Exception as e:
@@ -137,6 +139,7 @@ def login():
                             email=user['Email'],
                             role=user['Role'],
                             permission=user['Permission']
+                            domain = user['Domain']
                         )
                         login_user(user_obj)
                         flash('Login successful!', 'success')
@@ -180,6 +183,20 @@ def dashboard():
         print(f"Error in dashboard route: {e}")  # Debug log
         flash('Error accessing dashboard', 'error')
         return redirect(url_for('login'))
+
+
+# ----meet link------
+@app.route('/meet')  #c5
+@login_required
+@role_required(['Employee'])
+def meet():
+    if current_user.domain == 'Development':
+        return redirect('https://meet.google.com/qso-sdhv-myg')
+    elif current_user.domain == 'Design':
+        return redirect('https://meet.google.com/xam-iapn-ins')
+    else :
+        return 'no meet link available'
+
 
 @app.route('/admin')
 @login_required
