@@ -698,20 +698,21 @@ def admin_work_log():
             else:
                 # HR sees work logs for their domain
                 cursor.execute('''
-                    SELECT 
-                        w.id,
-                        w.employee_email,
-                        w.subject,
-                        w.body,
-                        w.status,
-                        DATE_FORMAT(w.assigned_date, '%Y-%m-%d %H:%i') as formatted_assigned_date,
-                        DATE_FORMAT(w.deadline, '%Y-%m-%d') as formatted_deadline,
-                        e.Name as employee_name 
-                    FROM work_log w 
-                    JOIN ems e ON w.employee_email = e.Email 
-                    WHERE e.Email LIKE %s
-                    ORDER BY w.assigned_date DESC
-                ''', (f'%@{hr_domain}',))
+    SELECT 
+        w.id,
+        w.employee_email,
+        w.subject,
+        w.body,
+        w.status,
+        DATE_FORMAT(w.assigned_date, '%Y-%m-%d %H:%i') as formatted_assigned_date,
+        DATE_FORMAT(w.deadline, '%Y-%m-%d') as formatted_deadline,
+        e.Name as employee_name 
+    FROM work_log w 
+    JOIN ems e ON w.employee_email = e.Email 
+    WHERE e.Domain = %s AND e.Role = "Employee"
+    ORDER BY w.assigned_date DESC
+''', (hr_domain,))
+
             work_logs = cursor.fetchall()
             print(f"Fetched work logs: {work_logs}")  # Debug log
             
