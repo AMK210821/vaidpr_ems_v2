@@ -217,7 +217,7 @@ def dashboard():
     
 @app.route('/meet')  #c5
 @login_required
-@role_required(['Employee'])
+@role_required(['Employee','HR'])
 def meet():
     if current_user.domain == 'Development':
         return redirect('https://meet.google.com/qso-sdhv-myg')
