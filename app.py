@@ -49,6 +49,11 @@ def get_db_connection():
             user='root',
             password='hucNoZjKVOsVWROObvpJrkduvyoYLIxx',
             database='railway'
+            # host='Localhost',
+            # port='3306',
+            # user='root',
+            # password='root',
+            # database='vaidpr_ems'
         )
     except Exception as err:
         print(f"Database connection error: {err}")
@@ -56,15 +61,40 @@ def get_db_connection():
 
 # User class for Flask-Login
 class User(UserMixin):
-    def __init__(self, id, email, role, permission):
+    def __init__(self, id, email, role, permission, domain):
         self.id = id
         self.email = email
         self.role = role
         self.permission = permission
-        self.domain = domain
+        self.domain = domain #c3
 
     def get_id(self):
         return str(self.email)  # Use email as the user identifier
+#1---------
+@app.route('/update_attendance', methods=['POST'])
+def update_attendance():
+    try:
+        data = request.get_json()
+        employee_id = data.get('employee_id')
+
+        if not employee_id:
+            return jsonify({"error": "Employee ID is required"}), 400
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Increment attendance by 1
+        cursor.execute("UPDATE ems SET Attendance = Attendance + 1 WHERE id = %s", (employee_id,))
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({"message": "Attendance updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+#1----------
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -84,7 +114,7 @@ def load_user(user_id):
                 email=user['Email'],
                 role=user['Role'],
                 permission=user['Permission'],
-                domain=user['Domain']
+                domain=user['Domain'] #c2
             )
         return None
     except Exception as e:
@@ -108,6 +138,7 @@ def role_required(roles):
 @app.route('/')
 def index():
     return redirect(url_for('login'))
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -139,7 +170,7 @@ def login():
                             email=user['Email'],
                             role=user['Role'],
                             permission=user['Permission'],
-                            domain = user['Domain']
+                            domain=user['Domain']  #c1
                         )
                         login_user(user_obj)
                         flash('Login successful!', 'success')
@@ -183,9 +214,7 @@ def dashboard():
         print(f"Error in dashboard route: {e}")  # Debug log
         flash('Error accessing dashboard', 'error')
         return redirect(url_for('login'))
-
-
-# ----meet link------
+    
 @app.route('/meet')  #c5
 @login_required
 @role_required(['Employee'])
@@ -196,7 +225,7 @@ def meet():
         return redirect('https://meet.google.com/xam-iapn-ins')
     else :
         return 'no meet link available'
-
+    
 
 @app.route('/admin')
 @login_required
@@ -228,7 +257,7 @@ def admin_dashboard():
             for row in domain_results:
                 domain_counts[row['Domain']] = row['count']
             
-            # Get leave counts
+            # Get leave counts 
             print("Fetching leave counts...")  # Debug log
             cursor.execute('SELECT status, COUNT(*) as count FROM leave_applications GROUP BY status')
             status_results = cursor.fetchall()
@@ -376,7 +405,7 @@ def hr_dashboard():
     
     return render_template('hr/dashboard.html',
                          total_employees=total_employees,
-                         present_today=present_today,
+                         present_today=present_today, 
                          pending_leaves=pending_leaves,
                          active_tasks=active_tasks,
                          recent_leaves=recent_leaves,
@@ -390,7 +419,7 @@ def employee_dashboard():
     
     # Initialize default values
     dashboard_data = {
-        'attendance_percentage': 0,
+        'attendance': 0, #2
         'completed_tasks': 0,
         'pending_tasks': 0,
         'leaves_taken': 0,
@@ -400,6 +429,8 @@ def employee_dashboard():
         'employee_name': "",
         'employee_domain': "",
         'employee_mobile': "",
+        'employee_dob': "",
+        'employee_gender': "", 
         'today': datetime.now().strftime('%Y-%m-%d')
     }
     
@@ -415,10 +446,10 @@ def employee_dashboard():
             print("Executing employee details query...")
             # Get employee details with proper error handling
             cursor.execute('''
-                SELECT Name, Email, Domain, Mobile, COALESCE(Attendance, 0) as Attendance 
-                FROM ems 
-                WHERE Email = %s
-            ''', (current_user.email,))
+                SELECT Name, Email, Domain, Mobile, Attendance,dob,gender  
+            FROM ems 
+            WHERE Email = %s 
+            ''', (current_user.email,)) #3 
             employee = cursor.fetchone()
             print(f"Employee details: {employee}")  # Debug log
             
@@ -430,13 +461,12 @@ def employee_dashboard():
             dashboard_data.update({
                 'employee_name': employee['Name'],
                 'employee_domain': employee['Domain'],
-                'employee_mobile': employee['Mobile']  # This should now be properly passed
+                'employee_mobile': employee['Mobile'],
+                'attendance': int(employee['Attendance']) ,
+                 'employee_dob': employee['dob'],
+                  'employee_gender': employee['gender'] #4  # This should now be properly passed
             })
             
-            print("Calculating attendance percentage...")
-            # Calculate attendance percentage safely
-            attendance = float(employee['Attendance'])
-            dashboard_data['attendance_percentage'] = round(attendance, 2)
             
             print("Executing task counts query...")
             # Get task counts with status - Fixed query to properly count tasks
@@ -537,6 +567,10 @@ def employee_dashboard():
     
     return render_template('employee/dashboard.html', **dashboard_data)
 
+@app.route('/img', methods=['GET', 'POST'])
+
+
+
 @app.route('/employee-log')
 @login_required
 @role_required(['Admin', 'HR'])
@@ -561,6 +595,7 @@ def employee_log():
     
     return render_template('employee_log.html', employees=employees)
 
+
 @app.route('/add-employee', methods=['GET', 'POST'])
 @login_required
 @role_required(['Admin', 'HR'])
@@ -574,6 +609,8 @@ def add_employee():
             password = request.form['password']
             mobile = request.form['mobile']
             adhaar = request.form['adhaar']
+            gender = request.form['gender']
+            dob = request.form['dob']
             
             # Hash the password
             hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
@@ -583,11 +620,11 @@ def add_employee():
                 cursor = conn.cursor()
                 cursor.execute("""
                     INSERT INTO ems 
-                    (Email, Name, Domain, Role, Pass, Mobile, Adhaar, Permission) 
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    (Email, Name, Domain, Role, Pass, Mobile, Adhaar, Permission,gender,dob) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s,%s,%s)
                 """, (
                     email, name, domain, role, hashed.decode('utf-8'),
-                    mobile, adhaar, 'basic'
+                    mobile, adhaar, 'basic',gender,dob
                 ))
                 conn.commit()
                 cursor.close()
@@ -617,6 +654,9 @@ def work_log():
     else:
         return redirect(url_for('employee_work_log'))
 
+
+
+#change1
 @app.route('/admin/work-log')
 @login_required
 @role_required(['Admin', 'HR'])
@@ -630,7 +670,7 @@ def admin_work_log():
             
             # Get employees for the dropdown (only for Admin/HR)
             if current_user.role == 'Admin':
-                cursor.execute('SELECT Email, Name FROM ems WHERE Role != "Admin"')
+                cursor.execute('SELECT Email, Name, Domain FROM ems WHERE Role != "Admin"')
             else:
                 # For HR, filter employees by domain
                 hr_domain = current_user.email.split('@')[-1]
@@ -725,43 +765,94 @@ def employee_work_log():
                         today=datetime.now().strftime('%Y-%m-%d'),
                         is_admin=False)
 
+# @app.route('/assign-work', methods=['POST'])
+# @login_required
+# @role_required(['Admin', 'HR'])
+# def assign_work():
+#     if request.method == 'POST':
+#         try:
+#             # Retrieve a single employee email from the form
+#             employee_email = request.form.get('employee_email')
+#             subjects = request.form.getlist('subjects[]')
+#             bodies = request.form.getlist('bodies[]')
+#             deadlines = request.form.getlist('deadlines[]')
+            
+#             print(f"Assigning work to email: {employee_email}")  # Debug log
+#             print(f"Subjects: {subjects}, Bodies: {bodies}, Deadlines: {deadlines}")  # Debug log
+            
+#             conn = get_db_connection()
+#             if conn:
+#                 cursor = conn.cursor()
+                
+#                 # Insert work assignment for the employee
+#                 for subject, body, deadline in zip(subjects, bodies, deadlines):
+#                     try:
+#                         cursor.execute("""
+#                             INSERT INTO work_log 
+#                             (employee_email, subject, body, deadline) 
+#                             VALUES (%s, %s, %s, %s)
+#                         """, (employee_email, subject, body, deadline))
+#                         print(f"Inserted work for {employee_email} with subject {subject}")  # Debug log
+#                     except Exception as insert_error:
+#                         print(f"Error inserting work for {employee_email}: {insert_error}")
+#                         traceback.print_exc()  # Print full traceback
+                
+#                 conn.commit()
+#                 cursor.close()
+#                 conn.close()
+                
+#                 flash('Work assigned successfully!', 'success')
+#                 return redirect(url_for('admin_work_log'))
+                
+#         except Exception as e:
+#             print(f"Error assigning work: {e}")
+#             traceback.print_exc()  # Print full traceback
+#             flash('Error assigning work', 'error')
+            
+#     return redirect(url_for('admin_work_log'))
+
 @app.route('/assign-work', methods=['POST'])
 @login_required
 @role_required(['Admin', 'HR'])
 def assign_work():
     if request.method == 'POST':
         try:
-            # Retrieve a single employee email from the form
-            employee_email = request.form.get('employee_email')
+            # Retrieve multiple employee emails from the form
+            employee_emails = request.form.getlist('employee_emails[]')
             subjects = request.form.getlist('subjects[]')
             bodies = request.form.getlist('bodies[]')
             deadlines = request.form.getlist('deadlines[]')
             
-            print(f"Assigning work to email: {employee_email}")  # Debug log
+            print(f"Assigning work to emails: {employee_emails}")  # Debug log
             print(f"Subjects: {subjects}, Bodies: {bodies}, Deadlines: {deadlines}")  # Debug log
+            
+            if not employee_emails:
+                flash('Please select at least one employee', 'error')
+                return redirect(url_for('admin_work_log'))
             
             conn = get_db_connection()
             if conn:
                 cursor = conn.cursor()
                 
-                # Insert work assignment for the employee
-                for subject, body, deadline in zip(subjects, bodies, deadlines):
-                    try:
-                        cursor.execute("""
-                            INSERT INTO work_log 
-                            (employee_email, subject, body, deadline) 
-                            VALUES (%s, %s, %s, %s)
-                        """, (employee_email, subject, body, deadline))
-                        print(f"Inserted work for {employee_email} with subject {subject}")  # Debug log
-                    except Exception as insert_error:
-                        print(f"Error inserting work for {employee_email}: {insert_error}")
-                        traceback.print_exc()  # Print full traceback
+                # Insert work assignment for each selected employee
+                for employee_email in employee_emails:
+                    for subject, body, deadline in zip(subjects, bodies, deadlines):
+                        try:
+                            cursor.execute("""
+                                INSERT INTO work_log 
+                                (employee_email, subject, body, deadline) 
+                                VALUES (%s, %s, %s, %s)
+                            """, (employee_email, subject, body, deadline))
+                            print(f"Inserted work for {employee_email} with subject {subject}")  # Debug log
+                        except Exception as insert_error:
+                            print(f"Error inserting work for {employee_email}: {insert_error}")
+                            traceback.print_exc()  # Print full traceback
                 
                 conn.commit()
                 cursor.close()
                 conn.close()
                 
-                flash('Work assigned successfully!', 'success')
+                flash(f'Work assigned successfully to {len(employee_emails)} employees!', 'success')
                 return redirect(url_for('admin_work_log'))
                 
         except Exception as e:
@@ -1196,44 +1287,26 @@ def upload_file():
     except Exception as e:
         print(f"Error uploading file: {e}")
         return jsonify({'error': str(e)}), 500
-
-# @app.route('/meet')  #c5
-# @login_required
-# @role_required(['Employee'])
-# def meet():
-#     if current_user.domain == 'Development':
-#         return redirect('https://meet.google.com/qso-sdhv-myg')
-#     elif current_user.domain == 'Design':
-#         return redirect('https://meet.google.com/xam-iapn-ins')
-#     else :
-#         return 'no meet link available'
-
-
-# @app.route('/update_attendance', methods=['POST'])
-# def update_attendance():
-#     try:
-#         data = request.get_json()
-#         employee_id = data.get('employee_id')
-
-#         if not employee_id:
-#             return jsonify({"error": "Employee ID is required"}), 400
-
-#         conn = get_db_connection()
-#         cursor = conn.cursor()
-
-#         # Increment attendance by 1
-#         cursor.execute("UPDATE ems SET Attendance = Attendance + 1 WHERE id = %s", (employee_id,))
-#         conn.commit()
-
-#         cursor.close()
-#         conn.close()
-
-#         return jsonify({"message": "Attendance updated successfully"}), 200
-
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-#1----------
-
+    
+@app.route('/load_domains',methods=['POST'])
+@login_required
+@role_required(['Admin', 'HR'])
+def load_domains():
+    try:
+        conn = get_db_connection()
+        if conn:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute('SELECT DISTINCT Domain FROM ems')
+            domains = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            
+            return jsonify(domains), 200
+            
+    except Exception as e:
+        print(f"Error loading domains: {e}")
+        return jsonify({'error': str(e)}), 500
+    
 
 if __name__ == '__main__':
     app.run(debug=True) 
