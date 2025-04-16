@@ -3,8 +3,9 @@
 {% block title %}Work Log - Vaid PR EMS{% endblock %}
 
 {% block content %}
+<!-- 
 <div class="container-fluid">
-    <!-- Assign Work Card -->
+    Assign Work Card 
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
@@ -64,7 +65,9 @@
             </div>
         </div>
     </div>
-<!-- 
+ -->
+<!-- change1-start -->
+     <!-- Work Assignment Form -->
      <div class="card mb-4">
         <div class="card-header">
             <h4>Assign Work</h4>
@@ -72,6 +75,7 @@
         <div class="card-body">
             <form action="{{ url_for('assign_work') }}" method="post" id="workAssignmentForm">
             
+                <!-- Employee Selection -->
                 <div class="form-group mb-3">
                     <label for="employeeSelect">Select Employees:</label>
                     {% if is_admin %}
@@ -104,6 +108,7 @@
                     <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple employees</small>
                 </div>
 
+                <!-- Dynamic Work Assignment Fields -->
                 <div id="workAssignments">
                     <div class="work-assignment mb-3">
                         <div class="form-group">
@@ -120,12 +125,14 @@
                         </div>
                     </div>
                 </div>
-
+<!-- 
+                <button type="button" class="btn btn-secondary mb-3" id="addMoreWork">Add More Work</button> -->
                 <button type="submit" class="btn btn-primary">Assign Work</button>
             </form>
         </div>
     </div>
- -->
+<!-- end -->
+
     <!-- Work Log Table -->
     <div class="row">
         <div class="col-12">
@@ -144,10 +151,9 @@
                                     <th>ID</th>
                                     <th>Employee</th>
                                     <th>Subject</th>
-                                    <th>Description</th>
                                     <th>Assigned Date</th>
-                                    <th>DeadLine<th>
-                                    <th>Status<th>    
+                                    <th>DeadLine</th>
+                                    <th>Status</th>    
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -157,7 +163,6 @@
                                     <td>{{ work.id }}</td>
                                     <td>{{ work.employee_name }}</td>
                                     <td>{{ work.subject }}</td>
-                                    <td>{{ work.body[:100] }}...</td>
                                     <td>{{ work.formatted_assigned_date }}</td>
                                     <td>{{ work.formatted_deadline }}                                            </td>
                                      <td>{{ work.status }}</td>
@@ -296,35 +301,61 @@
         const field = button.closest('.email-field');
         field.remove();
     }
-// document.addEventListener("DOMContentLoaded", function () {
-//         const domainSelect = document.getElementById("domainSelect");
-//         const employeeSelect = document.getElementById("employeeSelect");
-//         const allEmployeeOptions = Array.from(employeeSelect.options); // Store original list of options
 
-//         domainSelect.addEventListener("change", function () {
-//             const selectedDomain = domainSelect.value.trim(); // Get the selected domain
-//             employeeSelect.innerHTML = ""; // Clear the employee dropdown
 
-//             let hasMatchingEmployees = false;
+    document.addEventListener('DOMContentLoaded', function () {
+        // Table search functionality
+        const searchInput = document.getElementById('tableSearch');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function () {
+                const searchText = this.value.toLowerCase();
+                const table = document.querySelector('table');
+                const rows = table.getElementsByTagName('tr');
 
-//             // Filter and add matching employees
-//             allEmployeeOptions.forEach(option => {
-//                 const employeeDomain = option.getAttribute("data-domain")?.trim(); // Get the domain of the employee
-//                 if (selectedDomain === "" || employeeDomain === selectedDomain) {
-//                     employeeSelect.appendChild(option.cloneNode(true)); // Add matching option
-//                     hasMatchingEmployees = true;
-//                 }
-//             });
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchText) ? '' : 'none';
+                }
+            });
+        }
+    });
 
-//             // If no employees match, show a placeholder
-//             if (!hasMatchingEmployees) {
-//                 const placeholder = document.createElement("option");
-//                 placeholder.disabled = true;
-//                 placeholder.selected = true;
-//                 placeholder.textContent = "No employees found";
-//                 employeeSelect.appendChild(placeholder);
-//             }
-//         });
-//     });
+    
 </script>
-{% endblock %} 
+
+
+<!-- change1-start -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const domainSelect = document.getElementById("domainSelect");
+        const employeeSelect = document.getElementById("employeeSelect");
+        const allEmployeeOptions = Array.from(employeeSelect.options); // Store original list of options
+
+        domainSelect.addEventListener("change", function () {
+            const selectedDomain = domainSelect.value.trim(); // Get the selected domain
+            employeeSelect.innerHTML = ""; // Clear the employee dropdown
+
+            let hasMatchingEmployees = false;
+
+            // Filter and add matching employees
+            allEmployeeOptions.forEach(option => {
+                const employeeDomain = option.getAttribute("data-domain")?.trim(); // Get the domain of the employee
+                if (selectedDomain === "" || employeeDomain === selectedDomain) {
+                    employeeSelect.appendChild(option.cloneNode(true)); // Add matching option
+                    hasMatchingEmployees = true;
+                }
+            });
+
+            // If no employees match, show a placeholder
+            if (!hasMatchingEmployees) {
+                const placeholder = document.createElement("option");
+                placeholder.disabled = true;
+                placeholder.selected = true;
+                placeholder.textContent = "No employees found";
+                employeeSelect.appendChild(placeholder);
+            }
+        });
+    });
+</script>
+{% endblock %}
