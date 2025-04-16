@@ -83,7 +83,7 @@ def load_user(user_id):
                 id=user['id'],
                 email=user['Email'],
                 role=user['Role'],
-                permission=user['Permission']
+                permission=user['Permission'],
                 domain=user['Domain']
             )
         return None
@@ -138,7 +138,7 @@ def login():
                             id=user['id'],
                             email=user['Email'],
                             role=user['Role'],
-                            permission=user['Permission']
+                            permission=user['Permission'],
                             domain = user['Domain']
                         )
                         login_user(user_obj)
