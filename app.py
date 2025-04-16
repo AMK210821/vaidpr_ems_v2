@@ -673,8 +673,8 @@ def admin_work_log():
                 cursor.execute('SELECT Email, Name, Domain FROM ems WHERE Role != "Admin"')
             else:
                 # For HR, filter employees by domain
-                hr_domain = current_user.email.split('@')[-1]
-                cursor.execute('SELECT Email, Name FROM ems WHERE Role = "Employee" AND Email LIKE %s', (f'%@{hr_domain}',))
+                  hr_domain = current_user.domain  # Use the domain field directly 
+                   cursor.execute('SELECT Email, Name, Domain FROM ems WHERE Role = "Employee" AND Domain = %s',(hr_domain,))       
             employees = cursor.fetchall()
             print(f"Fetched employees: {employees}")  # Debug log
             
