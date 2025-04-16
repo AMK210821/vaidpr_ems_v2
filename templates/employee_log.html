@@ -27,7 +27,7 @@
                                     <th>Domain</th>
                                     <th>Role</th>
                                     <th>Mobile</th>
-                                    <th>Adhaar</th>
+                                    <th>Gmail</th>
                                     <th>Attendance</th>
                                     <th>Leaves</th>
                                     <th>Actions</th>
@@ -50,67 +50,100 @@
                                     <td>{{ employee.Attendance }}</td>
                                     <td>{{ employee.Leaves }}</td>
                                     <td>
-                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editModal{{ employee.id }}" title="Edit">
+                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal"
+                                            data-bs-target="#editModal{{ employee.id }}" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </button>
-<!--                                         <button class="btn btn-sm btn-success" data-employee-id="{{ employee.id }}"
+                                        <button class="btn btn-sm btn-success" data-employee-id="{{ employee.id }}"
                                             onclick="addAttendance(this.getAttribute('data-employee-id'))"
                                             title="Mark Attendance">
                                             <i class="fas fa-calendar-check"></i>
-                                        </button> -->
-                                        <button class="btn btn-sm btn-danger" data-employee-id="{{ employee.id }}" onclick="confirmDelete(this.getAttribute('data-employee-id'))" title="Delete">
+                                        </button>
+
+                                        <button class="btn btn-sm btn-danger" data-employee-id="{{ employee.id }}"
+                                            onclick="confirmDelete(this.getAttribute('data-employee-id'))"
+                                            title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </td>
                                 </tr>
 
                                 <!-- Edit Modal for each employee -->
-                                <div class="modal fade" id="editModal{{ employee.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal fade" id="editModal{{ employee.id }}" tabindex="-1"
+                                    aria-hidden="true">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title">Edit Employee</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
                                             </div>
-                                            <form action="{{ url_for('edit_employee', employee_id=employee.id) }}" method="POST">
+                                            <form action="{{ url_for('edit_employee', employee_id=employee.id) }}"
+                                                method="POST">
                                                 <div class="modal-body">
                                                     <div class="mb-3">
-                                                        <label for="name{{ employee.id }}" class="form-label">Name</label>
-                                                        <input type="text" class="form-control" id="name{{ employee.id }}" name="name" value="{{ employee.Name }}" required>
+                                                        <label for="name{{ employee.id }}"
+                                                            class="form-label">Name</label>
+                                                        <input type="text" class="form-control"
+                                                            id="name{{ employee.id }}" name="name"
+                                                            value="{{ employee.Name }}" required>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label for="email{{ employee.id }}" class="form-label">Email</label>
-                                                        <input type="email" class="form-control" id="email{{ employee.id }}" name="email" value="{{ employee.Email }}" required>
+                                                        <label for="email{{ employee.id }}"
+                                                            class="form-label">Email</label>
+                                                        <input type="email" class="form-control"
+                                                            id="email{{ employee.id }}" name="email"
+                                                            value="{{ employee.Email }}" required>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label for="domain{{ employee.id }}" class="form-label">Domain</label>
-                                                        <select class="form-select" id="domain{{ employee.id }}" name="domain" required>
-                                                            <option value="Development" {% if employee.Domain == 'Development' %}selected{% endif %}>Development</option>
-                                                            <option value="Design" {% if employee.Domain == 'Design' %}selected{% endif %}>Design</option>
-                                                            <option value="Marketing" {% if employee.Domain == 'Marketing' %}selected{% endif %}>Marketing</option>
-                                                            <option value="Sales" {% if employee.Domain == 'Sales' %}selected{% endif %}>Sales</option>
-                                                            <option value="HR" {% if employee.Domain == 'HR' %}selected{% endif %}>HR</option>
-                                                            <option value="Finance" {% if employee.Domain == 'Finance' %}selected{% endif %}>Finance</option>
+                                                        <label for="domain{{ employee.id }}"
+                                                            class="form-label">Domain</label>
+                                                        <select class="form-select" id="domain{{ employee.id }}"
+                                                            name="domain" required>
+                                                            <option value="Development" {% if
+                                                                employee.Domain=='Development' %}selected{% endif %}>
+                                                                Development</option>
+                                                            <option value="Design" {% if employee.Domain=='Design'
+                                                                %}selected{% endif %}>Design</option>
+                                                            <option value="Marketing" {% if employee.Domain=='Marketing'
+                                                                %}selected{% endif %}>Marketing</option>
+                                                            <option value="Sales" {% if employee.Domain=='Sales'
+                                                                %}selected{% endif %}>Sales</option>
+                                                            <option value="HR" {% if employee.Domain=='HR' %}selected{%
+                                                                endif %}>HR</option>
+                                                            <option value="Finance" {% if employee.Domain=='Finance'
+                                                                %}selected{% endif %}>Finance</option>
                                                         </select>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label for="role{{ employee.id }}" class="form-label">Role</label>
-                                                        <select class="form-select" id="role{{ employee.id }}" name="role" required>
-                                                            <option value="Employee" {% if employee.Role == 'Employee' %}selected{% endif %}>Employee</option>
-                                                            <option value="HR" {% if employee.Role == 'HR' %}selected{% endif %}>HR</option>
+                                                        <label for="role{{ employee.id }}"
+                                                            class="form-label">Role</label>
+                                                        <select class="form-select" id="role{{ employee.id }}"
+                                                            name="role" required>
+                                                            <option value="Employee" {% if employee.Role=='Employee'
+                                                                %}selected{% endif %}>Employee</option>
+                                                            <option value="HR" {% if employee.Role=='HR' %}selected{%
+                                                                endif %}>HR</option>
                                                         </select>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label for="mobile{{ employee.id }}" class="form-label">Mobile</label>
-                                                        <input type="text" class="form-control" id="mobile{{ employee.id }}" name="mobile" value="{{ employee.Mobile }}" required>
+                                                        <label for="mobile{{ employee.id }}"
+                                                            class="form-label">Mobile</label>
+                                                        <input type="text" class="form-control"
+                                                            id="mobile{{ employee.id }}" name="mobile"
+                                                            value="{{ employee.Mobile }}" required>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label for="adhaar{{ employee.id }}" class="form-label">Adhaar</label>
-                                                        <input type="text" class="form-control" id="adhaar{{ employee.id }}" name="adhaar" value="{{ employee.Adhaar }}" required>
+                                                        <label for="adhaar{{ employee.id }}"
+                                                            class="form-label">Adhaar</label>
+                                                        <input type="text" class="form-control"
+                                                            id="adhaar{{ employee.id }}" name="adhaar"
+                                                            value="{{ employee.Adhaar }}" required>
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Close</button>
                                                     <button type="submit" class="btn btn-primary">Save Changes</button>
                                                 </div>
                                             </form>
@@ -151,11 +184,11 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Table search functionality
         const searchInput = document.getElementById('tableSearch');
         if (searchInput) {
-            searchInput.addEventListener('keyup', function() {
+            searchInput.addEventListener('keyup', function () {
                 const searchText = this.value.toLowerCase();
                 const table = document.querySelector('table');
                 const rows = table.getElementsByTagName('tr');
@@ -176,24 +209,25 @@
         deleteModal.show();
     }
 
-    // function addAttendance(employeeId) {
-    //     fetch('/update_attendance', {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json'
-    //         },
-    //         body: JSON.stringify({ employee_id: employeeId })
-    //     })
-    //         .then(response => response.json())
-    //         .then(data => {
-    //             if (data.message) {
-    //                 alert("Attendance updated successfully!");
-    //                 location.reload();  // Refresh page to reflect updated attendance
-    //             } else {
-    //                 alert("Error: " + data.error);
-    //             }
-    //         })
-    //         .catch(error => console.error('Error:', error));
-    // }
+    function addAttendance(employeeId) {
+        fetch('/update_attendance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ employee_id: employeeId })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert("Attendance updated successfully!");
+                    location.reload();  // Refresh page to reflect updated attendance
+                } else {
+                    alert("Error: " + data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
 </script>
-{% endblock %} 
+{% endblock %}
