@@ -726,7 +726,7 @@ def admin_work_log():
     return render_template('work_log.html', 
                         employees=employees, 
                         work_logs=work_logs, 
-                        is_admin=(current_user.role == 'Admin'))
+                        is_admin=(current_user.role == 'Admin','HR'))
 
 @app.route('/employee/work-log')
 @login_required
