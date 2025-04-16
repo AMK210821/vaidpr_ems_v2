@@ -26,20 +26,22 @@ body {
     margin-bottom: 2rem;
 }
 
-/* Sidebar Styles */
+/* Wrapper for layout */
 .wrapper {
     display: flex;
     width: 100%;
 }
 
+/* Sidebar Styles */
 #sidebar {
     min-width: 250px;
     max-width: 250px;
     min-height: 100vh;
     background: #343a40;
     color: #fff;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
     position: fixed;
+    z-index: 100;
 }
 
 #sidebar.active {
@@ -73,16 +75,18 @@ body {
 
 /* Content Area */
 #content {
-    /* width: 100%;
-    padding: 20px;
-    min-height: 100vh;
-    transition: all 0.3s; */
     margin-left: 250px; /* Same as the sidebar width */
     flex: 1;
     overflow-y: auto; /* Enable scrolling for the main content */
     padding: 20px;
-    height: 100vh; /* Full height for scrolling */
+    height: 100vh;
     box-sizing: border-box;
+    transition: margin-left 0.3s ease;
+}
+
+/* Content adjustment when sidebar collapsed */
+#sidebar.active ~ #content {
+    margin-left: 0;
 }
 
 /* Cards and Stats */
@@ -112,8 +116,21 @@ body {
     #sidebar {
         margin-left: -250px;
     }
+
     #sidebar.active {
         margin-left: 0;
+    }
+
+    #sidebar.active ~ #content {
+        margin-left: 250px;
+    }
+
+    #content {
+        margin-left: 0;
+    }
+
+    #sidebarCollapse span {
+        display: none;
     }
 }
 
@@ -131,6 +148,16 @@ body {
     box-shadow: none;
     outline: none !important;
     border: none;
+}
+
+/* Toggle button */
+#sidebarCollapse {
+    background: #343a40;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    margin-bottom: 20px;
 }
 
 /* Cards */
@@ -162,39 +189,18 @@ body {
     color: #fff;
 }
 
-/* Media Queries */
-@media (max-width: 768px) {
-    #sidebarCollapse span {
-        display: none;
-    }
-} 
-
-/* Make the table container scrollable */
+/* Table Responsive Styles */
 .table-responsive {
-    max-height: 400px; /* Adjust the height as needed */
-    overflow-y: auto; /* Enable vertical scrolling */
-    overflow-x: hidden; /* Prevent horizontal scrolling */
-}
-
-/* Optional: Add a border to the table container for better visibility */
-.table-responsive {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: auto;
     border: 1px solid #ddd;
     padding: 10px;
     border-radius: 5px;
 }
 
-.table-responsive {
-    max-height: 400px; /* Adjust the height as needed */
-    overflow-y: auto; /* Enable vertical scrolling */
-    overflow-x: auto; /* Enable horizontal scrolling for wide tables */
-    border: 1px solid #ddd; /* Optional: Add a border for better visibility */
-    padding: 10px;
-    border-radius: 5px;
-}
-
-/* Ensure the table adjusts to its content */
 .table {
-    width: 100%; /* Ensure the table takes full width of the container */
-    table-layout: auto; /* Allow columns to adjust based on content */
-    white-space: nowrap; /* Prevent text wrapping in table cells */
+    width: 100%;
+    table-layout: auto;
+    white-space: nowrap;
 }
