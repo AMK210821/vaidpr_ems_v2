@@ -861,7 +861,7 @@ def assign_work():
             flash('Error assigning work', 'error')
             
     return redirect(url_for('admin_work_log'))
-    return render_template("work_log.html", ..., user_role=current_user.role)
+    # return render_template("work_log.html", ..., user_role=current_user.role)
 
 
 @app.route('/delete-work/<int:work_id>')
