@@ -78,20 +78,7 @@
                 <!-- Employee Selection -->
                 <div class="form-group mb-3">
                     <label for="employeeSelect">Select Employees:</label>
-                    <div class="table-responsive mb-3">
-                        <label for="domain" class="form-label">Domain</label>
-                        <select class="form-select" id="domainSelect" name="domain" required>
-                            <option value="">ALL...</option>
-                            <option value="Development">Development</option>
-                            <option value="Design">Design</option>
-                            <option value="Marketing">Marketing</option>
-                            <option value="Sales">Sales</option>
-                            <option value="HR">Human Resources</option>
-                            <option value="Finance">Finance</option>
-                        </select>
-                    </div>
-                    {% if is_admin%}
-<!--                     {% if user_role in ['Admin', 'HR'] %} -->
+                    {% if is_admin %}
                     <div class="table-responsive mb-3">
                         <label for="domain" class="form-label">Domain</label>
                         <select class="form-select" id="domainSelect" name="domain" required>
