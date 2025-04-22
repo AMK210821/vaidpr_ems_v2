@@ -26,7 +26,7 @@ def init_db():
                 Pass VARCHAR(255) NOT NULL,
                 Mobile VARCHAR(15) UNIQUE NOT NULL,
                 Adhaar VARCHAR(12) UNIQUE NOT NULL,
-                Dob DATE NOT NULL,
+                dob date NOT NULL,
                 Attendance INT DEFAULT 0,
                 Leaves INT DEFAULT 0,
                 Permission VARCHAR(225) NOT NULL,
