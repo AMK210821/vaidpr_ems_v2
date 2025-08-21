@@ -44,21 +44,11 @@ def get_db_connection():
     try:
         # Connect to MySQL database on Railway
         return mysql.connector.connect(
-            host='srv1085.hstgr.io',
-            port=3306,
-            user='u578941609_vaid_pr',
-            password='Vaidpr@2025',
-            database='u578941609_viadpr_ems'
-            # host='trolley.proxy.rlwy.net',
-            # port=19855,
-            # user='root',
-            # password='hucNoZjKVOsVWROObvpJrkduvyoYLIxx',
-            # database='railway'
-            # host='Localhost',
-            # port='3306',
-            # user='root',
-            # password='root',
-            # database='vaidpr_ems'
+            host='Localhost',
+            port='3306',
+            user='root',
+            password='root',
+            database='vaidpr_ems'
         )
     except Exception as err:
         print(f"Database connection error: {err}")
