@@ -6,11 +6,11 @@ def init_db():
     try:
         # Connect to MySQL database
         conn = mysql.connector.connect(
-            host='trolley.proxy.rlwy.net',
-            port=19855,
+            host='localhost',
+            port=3307,
             user='root',
-            password='hucNoZjKVOsVWROObvpJrkduvyoYLIxx',
-            database='railway'
+            password='',
+            database='vaid_ems'
         )
         
         cursor = conn.cursor()
